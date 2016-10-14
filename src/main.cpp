@@ -18,100 +18,14 @@ DigitalOut txled(LED1);
 DigitalOut rxled(LED2);
 
 #include "lmic.h"
+#include "config.h"
 
 static uint8_t mydata[] = "Hello, world!";
-
-/*!
- * When set to 1 the application uses the Over-the-Air activation procedure
- * When set to 0 the application uses the Personalization activation procedure
- */
-#define OVER_THE_AIR_ACTIVATION                     0
-
-#if( OVER_THE_AIR_ACTIVATION == 0 )
-
-/*!
- * Defines the network ID when using personalization activation procedure
- */
-#define LORAWAN_NET_ID                              ( uint32_t )0x00000000
-
-/*!
- * Defines the device address when using personalization activation procedure
- */
-#define LORAWAN_DEV_ADDR                            ( uint32_t )0x0D4991A1
-
-#endif
-
-/*!
- * Defines the application data transmission duty cycle
- */
-#define APP_TX_DUTYCYCLE                            5000 // 5 [s] value in ms
-#define APP_TX_DUTYCYCLE_RND                        1000 // 1 [s] value in ms
-
-/*!
- * LoRaWAN Adaptative Data Rate
- */
-#define LORAWAN_ADR_ON                              1
-
-/*!
- * LoRaWAN confirmed messages
- */
-#define LORAWAN_CONFIRMED_MSG_ON                    1
-
-/*!
- * LoRaWAN application port
- */
-#define LORAWAN_APP_PORT                            15
-
-/*!
- * User application data buffer size
- */
-#if ( LORAWAN_CONFIRMED_MSG_ON == 1 )
-#define LORAWAN_APP_DATA_SIZE                       6
-
-#else
-#define LORAWAN_APP_DATA_SIZE                       1
-
-#endif
-//////////////////////////////////////////////////
-// CONFIGURATION (FOR APPLICATION CALLBACKS BELOW)
-//////////////////////////////////////////////////
-
-// application router ID (LSBF)
-static const uint8_t AppEui[8] =
-{
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-};
-
-// unique device ID (LSBF)
-static const u1_t DevEui[8] =
-{
-    0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF
-};
-
-// device-specific AES key (derived from device EUI)
-static const uint8_t DevKey[16] =
-{
-    0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6,
-    0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C
-};
-
-#if( OVER_THE_AIR_ACTIVATION == 0 )
-// network session key
-static uint8_t NwkSKey[] =
-{ 0xAC, 0xF7, 0xFD, 0xEA, 0xEE, 0x33, 0xF8, 0xD0, 0xA6, 0x80, 0x4A, 0xD0, 0x25, 0xC6, 0x41, 0x7B };
-
-// application session key
-static uint8_t ArtSKey[] =
-{ 0x29, 0x77, 0x31, 0x0A, 0x2B, 0x92, 0x35, 0xE1, 0x72, 0x96, 0x91, 0x39, 0xCC, 0xEB, 0x70, 0x66 };
-#endif
 
 // LEDs and Frame jobs
 osjob_t rxLedJob;
 osjob_t txLedJob;
 osjob_t sendFrameJob;
-
-// LED state
-static bool AppLedStateOn = false;
 
 //////////////////////////////////////////////////
 // Utility functions
@@ -129,28 +43,6 @@ int32_t randr( int32_t min, int32_t max )
 }
 
 //////////////////////////////////////////////////
-// APPLICATION CALLBACKS
-//////////////////////////////////////////////////
-
-// provide application router ID (8 bytes, LSBF)
-void os_getArtEui( uint8_t *buf )
-{
-    memcpy( buf, AppEui, 8 );
-}
-
-// provide device ID (8 bytes, LSBF)
-void os_getDevEui( uint8_t *buf )
-{
-    memcpy( buf, DevEui, 8 );
-}
-
-// provide device key (16 bytes)
-void os_getDevKey( uint8_t *buf )
-{
-    memcpy( buf, DevKey, 16 );
-}
-
-//////////////////////////////////////////////////
 // MAIN - INITIALIZATION AND STARTUP
 //////////////////////////////////////////////////
 
@@ -164,38 +56,13 @@ static void onTxLed( osjob_t* j )
     txled = 0;
 }
 
-static void prepareTxFrame( void )
-{
-    LMIC.frame[0] = AppLedStateOn;
-#if ( LORAWAN_CONFIRMED_MSG_ON == 1 )
-    LMIC.frame[1] = LMIC.seqnoDn >> 8;
-    LMIC.frame[2] = LMIC.seqnoDn;
-    LMIC.frame[3] = LMIC.rssi >> 8;
-    LMIC.frame[4] = LMIC.rssi;
-    LMIC.frame[5] = LMIC.snr;
-#endif
-}
-
 void processRxFrame( void )
 {
-    switch( LMIC.frame[LMIC.dataBeg - 1] ) // Check Rx port number
-    {
-        case 1: // The application LED can be controlled on port 1 or 2
-        case 2:
-            if( LMIC.dataLen == 1 )
-            {
-                AppLedStateOn = LMIC.frame[LMIC.dataBeg] & 0x01;
-            }
-            break;
-        default:
-            break;
-    }
+
 }
 
 static void onSendFrame( osjob_t* j )
 {
-    prepareTxFrame( );
-    //LMIC_setTxData2( LORAWAN_APP_PORT, LMIC.frame, LORAWAN_APP_DATA_SIZE, LORAWAN_CONFIRMED_MSG_ON );
     LMIC_setTxData2(1, mydata, sizeof(mydata)-1, 0);
 
     // Blink Tx LED
@@ -215,13 +82,9 @@ static void onInit( osjob_t* j )
     LMIC_setDrTxpow( DR_SF8, 14 );
 #endif
 
-    // start joining
-#if( OVER_THE_AIR_ACTIVATION != 0 )
-    LMIC_startJoining( );
-#else
     LMIC_setSession( LORAWAN_NET_ID, LORAWAN_DEV_ADDR, NwkSKey, ArtSKey );
     onSendFrame( NULL );
-#endif
+
     // init done - onEvent( ) callback will be invoked...
 }
 
