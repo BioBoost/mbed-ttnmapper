@@ -11,8 +11,8 @@ uint32_t devAddr    = 0xECB5C5E5;
 uint8_t nwksKey[16] = { 0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C }; // LSBF
 uint8_t appKey[16]  = { 0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C }; // LSBF
 
-Serial pc (USBTX, USBRX);
-Serial * gps_Serial;
+Serial pc(USBTX, USBRX);
+Serial gps_serial(p28,p27);
 Gps* gps;
 Ticker gps_ticker;
 
@@ -31,8 +31,7 @@ int main(void)
     node = new ABP::Node(devAddr, nwksKey, appKey);
     //node = new OTAA::Node(appEui, devEui, appKey);
 
-    gps_Serial = new Serial(p28,p27); //serial object for use w/ GPS
-    gps = new Gps(gps_Serial);
+    gps = new Gps(&gps_serial);
     gps_ticker.attach(&show_gps_info, 2.0);
 
     wait(1.0);
