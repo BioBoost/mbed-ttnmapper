@@ -1,4 +1,4 @@
-
+#pragma once
 
 /*!
  * Defines the network ID when using personalization activation procedure
