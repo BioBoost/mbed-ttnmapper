@@ -3,6 +3,7 @@
 #include "Gps.h"
 #include "settings.h"
 #include "Packet.h"
+#include "Logger.h"
 
 using namespace SimpleLoRaWAN;
 
@@ -14,21 +15,13 @@ Ticker send_ticker;
 
 DigitalOut fix_led(LED4);
 DigitalOut tx_led(LED1);
+Logger logger(&pc);
 
 Node* node;
 
-void debug_tx_buffer()
-{
-    // for(int i = 0; i<sizeof(txBuffer); i++)
-    // {
-    //     pc.printf("0x%02x ", txBuffer[i]);
-    // }
-    // pc.printf("\r\n");
-}
-
 void show_gps_info()
 {
-   gps->debug(&pc);
+   logger.gps(gps);
 }
 
 void send_gps_info()
@@ -36,7 +29,7 @@ void send_gps_info()
     if(gps->fix){
         pc.printf("Sending packet:");
         uint8_t* packet = Packet::build(gps);
-        //debug_tx_buffer();
+        logger.packet(packet);
         node->send(reinterpret_cast<char*>(packet), 9);
     }
 }
@@ -56,7 +49,7 @@ int main(void)
 {
     init();
     wait(1.0);
-    
+
     while(true){
         node->process();
         gps->run();
