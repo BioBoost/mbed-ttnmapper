@@ -16,7 +16,6 @@ Serial gps_serial(p28,p27);
 Gps* gps;
 Ticker gps_ticker;
 Ticker send_ticker;
-DigitalIn gps_fix(p26);
 
 Node* node;
 
@@ -73,20 +72,17 @@ void debug_tx_buffer()
 
 void show_gps_info()
 {
-   //check if enough time has passed to warrant printing GPS info to screen
-   //note if refresh_Time is too low or pc.baud is too low, GPS data may be lost during printing
    gps->debug(&pc);
 }
 
 void send_gps_info()
 {
-    //if(gps_fix){
+    if(gps->fix){
         pc.printf("Sending packet:");
         build_packet(gps);
         debug_tx_buffer();
-        //node->send("Hello from Simple-LoRaWAN", 5);
         node->send(reinterpret_cast<char*>(txBuffer), 9);
-    //}
+    }
 }
 
 
@@ -101,8 +97,6 @@ int main(void)
     send_ticker.attach(&send_gps_info, 10.0);
 
     wait(1.0);
-
-    node->send("Hello from Simple-LoRaWAN", 25);
 
     while(true){
         node->process();
