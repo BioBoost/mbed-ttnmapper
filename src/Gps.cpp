@@ -1,5 +1,7 @@
 #include "Gps.h"
 #include "mbed.h"
+//required for fmod()
+#include <math.h>
 
 Gps::Gps(Serial* serial) : Adafruit_GPS(serial)
 {
@@ -25,7 +27,8 @@ void Gps::debug(Serial* serial)
     serial->printf("Fix: %d\n", (int) fix);
     serial->printf("Quality: %d\n", (int) fixquality);
     if (fix) {
-        serial->printf("Location: %5.2f%c, %5.2f%c\n", latitude, lat, longitude, lon);
+        serial->printf("Location: %5.6f%c, %5.6f%c\n", latitude_in_degrees(), lat, longitude_in_degrees(), lon);
+        serial->printf("HDOP: %5.2f\n", HDOP);
         serial->printf("Speed: %5.2f knots\n", speed);
         serial->printf("Angle: %5.2f\n", angle);
         serial->printf("Altitude: %5.2f\n", altitude);
@@ -40,8 +43,31 @@ void Gps::run()
     //check if we recieved a new message from GPS, if so, attempt to parse it,
     if ( newNMEAreceived() ) {
         parse(lastNMEA());
-//        if ( !parse(lastNMEA()) ) {
-//            continue;
-//        }
     }
+}
+
+// converts lat/long from Adafruit
+// degree-minute format to decimal-degrees
+double Gps::convertDegMinToDecDeg (float degMin) {
+  double min = 0.0;
+  double decDeg = 0.0;
+
+  //get the minutes, fmod() requires double
+  min = fmod((double)degMin, 100.0);
+
+  //rebuild coordinates in decimal degrees
+  degMin = (int) ( degMin / 100 );
+  decDeg = degMin + ( min / 60 );
+
+  return decDeg;
+}
+
+double Gps::latitude_in_degrees()
+{
+    return convertDegMinToDecDeg(latitude);
+}
+
+double Gps::longitude_in_degrees()
+{
+    return convertDegMinToDecDeg(longitude);
 }
