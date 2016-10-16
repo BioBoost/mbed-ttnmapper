@@ -20,7 +20,7 @@ Logger logger(&pc);
 Node* node;
 
 static const float GPS_UPDATE_TIME = 2.0;
-static const float LORAWAN_INTERVAL = 15.0;
+static const float LORAWAN_INTERVAL = 5.0;
 
 void show_gps_info()
 {
