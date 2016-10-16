@@ -41,7 +41,7 @@ void send_gps_info()
     }
 }
 
-int main(void)
+void init()
 {
     pc.baud(115200);
     node = new ABP::Node(devAddr, nwksKey, appKey);
@@ -50,9 +50,13 @@ int main(void)
     gps = new Gps(&gps_serial);
     gps_ticker.attach(&show_gps_info, 2.0);
     send_ticker.attach(&send_gps_info, 10.0);
+}
 
+int main(void)
+{
+    init();
     wait(1.0);
-
+    
     while(true){
         node->process();
         gps->run();
