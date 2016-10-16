@@ -19,6 +19,9 @@ Logger logger(&pc);
 
 Node* node;
 
+static const float GPS_UPDATE_TIME = 2.0;
+static const float LORAWAN_INTERVAL = 15.0;
+
 void show_gps_info()
 {
    logger.gps(gps);
@@ -41,8 +44,8 @@ void init()
     //node = new OTAA::Node(appEui, devEui, appKey);
 
     gps = new Gps(&gps_serial);
-    gps_ticker.attach(&show_gps_info, 2.0);
-    send_ticker.attach(&send_gps_info, 10.0);
+    gps_ticker.attach(&show_gps_info, GPS_UPDATE_TIME);
+    send_ticker.attach(&send_gps_info, LORAWAN_INTERVAL);
 }
 
 int main(void)
