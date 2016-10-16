@@ -1,11 +1,9 @@
 #include "mbed.h"
 #include "Simple-LoRaWAN.h"
-#include "stdio.h"
 #include "Gps.h"
 #include "settings.h"
 
 using namespace SimpleLoRaWAN;
-
 
 Serial pc(USBTX, USBRX);
 Serial gps_serial(p28,p27);
@@ -83,7 +81,6 @@ void send_gps_info()
         node->send(reinterpret_cast<char*>(txBuffer), 9);
     }
 }
-
 
 int main(void)
 {
