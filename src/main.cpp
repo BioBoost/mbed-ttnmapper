@@ -13,6 +13,9 @@ Gps* gps;
 Ticker gps_ticker;
 Ticker send_ticker;
 
+DigitalOut fix_led(LED4);
+DigitalOut tx_led(LED1);
+
 Node* node;
 
 uint8_t txBuffer[9];
@@ -97,5 +100,6 @@ int main(void)
     while(true){
         node->process();
         gps->run();
+        fix_led = gps->fix;
     }
 }
