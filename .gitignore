@@ -6,3 +6,5 @@ mbed_settings.pyc
 .mbed
 projectfiles
 *.py*
+
+src/settings.h
