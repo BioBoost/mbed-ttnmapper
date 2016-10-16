@@ -42,6 +42,7 @@ void init()
     pc.baud(115200);
     node = new ABP::Node(devAddr, nwksKey, appKey);
     //node = new OTAA::Node(appEui, devEui, appKey);
+    node->disableLinkCheck();
 
     gps = new Gps(&gps_serial);
     gps_ticker.attach(&show_gps_info, GPS_UPDATE_TIME);
