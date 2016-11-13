@@ -13,6 +13,9 @@ Gps* gps;
 Ticker gps_ticker;
 Ticker send_ticker;
 
+DigitalOut fix_led_external(p21);
+DigitalOut power_led_external(p22);
+
 DigitalOut fix_led(LED4);
 DigitalOut tx_led(LED1);
 Logger logger(&pc);
@@ -39,6 +42,7 @@ void send_gps_info()
 
 void init()
 {
+    power_led_external = 1;
     pc.baud(115200);
     node = new ABP::Node(devAddr, nwksKey, appKey);
     //node = new OTAA::Node(appEui, devEui, appKey);
@@ -58,5 +62,6 @@ int main(void)
         node->process();
         gps->run();
         fix_led = gps->fix;
+        fix_led_external = gps->fix;
     }
 }
