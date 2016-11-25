@@ -36,7 +36,7 @@ void send_gps_info()
         pc.printf("Sending packet:");
         uint8_t* packet = Packet::build(gps);
         logger.packet(packet);
-        node->send(reinterpret_cast<char*>(packet), 9);
+        node->send(packet, 9);
     }
 }
 
